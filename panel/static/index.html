@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Autossh-Steuerpanel</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1>Autossh-Steuerpanel</h1>
+        <p class="sub">
+          Tunnel anlegen, bearbeiten, aktivieren oder stoppen. Uptime Kuma:
+          <code>/monitor/stack</code> oder <code>/monitor/tunnel/&lt;id&gt;</code>.
+        </p>
+      </div>
+      <button type="button" class="btn secondary" id="btn-refresh">Aktualisieren</button>
+    </header>
+
+    <main>
+      <p id="msg" class="msg" hidden></p>
+      <section class="card" aria-labelledby="form-title">
+        <h2 id="form-title" class="card-title">Tunnel anlegen</h2>
+        <form id="tunnel-form" class="form-grid">
+          <label class="field">
+            <span>ID</span>
+            <input name="id" id="f-id" required pattern="[a-z0-9][a-z0-9_-]*" title="Kleinbuchstaben, Ziffern, - und _" placeholder="z. B. heimserver" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Anzeigename</span>
+            <input name="name" id="f-name" type="text" placeholder="optional" />
+          </label>
+          <label class="field">
+            <span>SSH-Benutzer</span>
+            <input name="ssh_user" id="f-ssh_user" required autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>SSH-Host</span>
+            <input name="ssh_host" id="f-ssh_host" required autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>SSH-Port</span>
+            <input name="ssh_port" id="f-ssh_port" type="number" min="1" max="65535" value="22" required />
+          </label>
+          <label class="field">
+            <span>Identity-Datei (im Container)</span>
+            <input name="identity_file" id="f-identity_file" type="text" placeholder="/root/.ssh/id_ed25519" />
+          </label>
+          <label class="field">
+            <span>Autossh-Monitor-Port (-M)</span>
+            <input name="monitor_port" id="f-monitor_port" type="number" min="0" max="65535" value="20000" required />
+          </label>
+          <label class="field full">
+            <span>Remote-Forward (-R)</span>
+            <input name="remote_forward" id="f-remote_forward" required placeholder="2200:localhost:22 oder *:1080 (SOCKS)" />
+          </label>
+          <label class="field checkbox">
+            <input name="enabled" id="f-enabled" type="checkbox" />
+            <span>Nach dem Speichern aktiviert</span>
+          </label>
+          <label class="field full">
+            <span>Zusätzliche SSH-Argumente (JSON-Array)</span>
+            <textarea name="extra_ssh_args" id="f-extra_ssh_args" rows="3" spellcheck="false"></textarea>
+          </label>
+          <div class="form-actions full">
+            <button type="submit" class="btn" id="btn-submit">Tunnel anlegen</button>
+            <button type="button" class="btn secondary" id="btn-form-reset" hidden>Abbrechen</button>
+          </div>
+        </form>
+      </section>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              <th>Aktiviert</th>
+              <th>Prozess</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p class="hint">
+        Speicherort: <code>data/connections.json</code> (Volume <code>/data</code>). API:
+        <code>POST/PUT/DELETE /api/tunnels</code>, <code>PUT /api/config</code>.
+      </p>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

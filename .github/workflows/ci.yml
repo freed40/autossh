@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  panel-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: panel/requirements.txt
+
+      - name: Install panel dependencies
+        run: pip install -r panel/requirements.txt
+
+      - name: Byte-compile panel
+        run: python -m compileall -q panel
+
+      - name: Import FastAPI application
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          AUTOSHH_PANEL_CONFIG_PATH: ${{ github.workspace }}/data/connections.example.json
+        run: python -c "from panel.app.main import app; assert app.title"
+
+  docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build panel image
+        run: docker build -t autossh-panel:ci .
+
+  autossh-c:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Configure and make autossh
+        run: |
+          chmod +x configure
+          ./configure
+          make

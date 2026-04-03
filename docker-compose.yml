@@ -1,0 +1,44 @@
+# Autossh-Steuerpanel + Uptime Kuma
+#
+# Start: docker compose up -d
+# UI Panel: http://localhost:8080
+# Uptime Kuma: http://localhost:3001 — Monitor-Typ „HTTP(s)“:
+#   - Gesamt: http://panel:8080/monitor/stack (Keyword „ok“, im Compose-Netzwerk)
+#   - Pro Tunnel: http://panel:8080/monitor/tunnel/<id> (Keyword „ok“ bzw. „disabled“)
+#
+# Vor dem ersten Start: cp data/connections.example.json data/connections.json anpassen.
+# SSH-Keys: Volume ${HOME}/.ssh muss lesbar sein; known_hosts ggf. vorher befüllen.
+#
+# Laptop / Heimnetz ohne viele Ports:
+#   Auf dem VPS lauscht dann z. B. SOCKS auf Port 1080 (Tunnel „laptop-socks“ in der Beispiel-Config).
+#   Browser/Apps: SOCKS5 → VPS:1080 — Verbindungen laufen durch den Laptop ins LAN.
+#   Dafür muss sshd auf dem VPS GatewayPorts erlauben, z. B. „GatewayPorts clientspecified“
+#   und -R mit Bind *:… (wie im Beispiel).
+#   Läuft das Panel im Docker auf dem Laptop und soll das LAN (192.168.x) erreichen,
+#   unter Linux „network_mode: host“ für „panel“ nutzen und die Zeile „ports:“ entfernen
+#   (sonst sieht der Container oft nur das Bridge-Netz, nicht dein WLAN/LAN).
+
+services:
+  panel:
+    build: .
+    container_name: autossh-panel
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+      - ${HOME}/.ssh:/root/.ssh:ro
+    environment:
+      AUTOSHH_PANEL_CONFIG_PATH: /data/connections.json
+    restart: unless-stopped
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    ports:
+      - "3001:3001"
+    volumes:
+      - kuma-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  kuma-data:

@@ -1,0 +1,28 @@
+{
+  "tunnels": [
+    {
+      "id": "beispiel",
+      "name": "Beispiel-Tunnel",
+      "enabled": false,
+      "ssh_user": "benutzer",
+      "ssh_host": "beispiel.example.net",
+      "ssh_port": 22,
+      "identity_file": "/root/.ssh/id_ed25519",
+      "monitor_port": 20000,
+      "remote_forward": "2200:localhost:22",
+      "extra_ssh_args": ["-o", "StrictHostKeyChecking=accept-new", "-o", "ServerAliveInterval=60"]
+    },
+    {
+      "id": "laptop-socks",
+      "name": "Laptop → VPS: SOCKS (ein Port, ganzes Heimnetz)",
+      "enabled": false,
+      "ssh_user": "benutzer",
+      "ssh_host": "meine-vps.example.net",
+      "ssh_port": 22,
+      "identity_file": "/root/.ssh/id_ed25519",
+      "monitor_port": 20100,
+      "remote_forward": "*:1080",
+      "extra_ssh_args": ["-o", "StrictHostKeyChecking=accept-new", "-o", "ServerAliveInterval=60"]
+    }
+  ]
+}

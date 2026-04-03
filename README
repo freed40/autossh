@@ -228,3 +228,77 @@ usually done in /etc/syslog.conf.
 
 -- 
 Kudos and raspberries to harding [at] motd.ca
+
+
+Web Control Panel (optional)
+----------------------------
+
+This repository also contains a small **FastAPI** application under `panel/`
+that starts `autossh` as child processes from a JSON configuration file.
+It provides a web UI and HTTP endpoints to enable or disable tunnels, create
+or edit definitions, and expose health checks for **Uptime Kuma**.
+
+### Docker Compose
+
+From the repository root:
+
+	cp data/connections.example.json data/connections.json
+	# Edit data/connections.json (SSH user, host, -R target, identity path).
+
+	docker compose up -d --build
+
+- **Panel UI and API:** http://localhost:8080  
+- **Uptime Kuma** (optional service in compose): http://localhost:3001  
+
+Mount your SSH keys read-only, e.g. `${HOME}/.ssh:/root/.ssh:ro`, and ensure
+`known_hosts` is populated if you use strict host key checking.
+
+Environment variable (optional): `AUTOSHH_PANEL_CONFIG_PATH` (default
+`/data/connections.json` inside the container). The compose file sets this to
+`/data/connections.json` mapped from `./data`.
+
+### Configuration (`data/connections.json`)
+
+Each tunnel includes fields such as `id`, `ssh_user`, `ssh_host`, `ssh_port`,
+`monitor_port` (autossh `-M`), `remote_forward` (single argument for `ssh -R`),
+optional `identity_file`, and `extra_ssh_args` (list of strings).
+
+For **one port to reach many internal services** via your laptop, use a
+**dynamic remote forward** (SOCKS on the SSH server), e.g. `remote_forward`
+`*:1080`. The server must allow it (`GatewayPorts` in `sshd_config`). If the
+panel runs in Docker **on the laptop** and must reach the LAN, on Linux use
+`network_mode: host` for the `panel` service and omit published `ports` (see
+comments in `docker-compose.yml`).
+
+### HTTP API (summary)
+
+- `GET /api/tunnels` — list status  
+- `GET /api/tunnels/{id}` — one tunnel  
+- `POST /api/tunnels` — create  
+- `PUT /api/tunnels/{id}` — replace  
+- `DELETE /api/tunnels/{id}` — remove  
+- `PATCH /api/tunnels/{id}/enabled` — `{"enabled": true|false}`  
+- `GET` / `PUT /api/config` — full config  
+
+### Monitoring (Uptime Kuma)
+
+- `GET /monitor/stack` — `200` with body `ok` if every **enabled** tunnel has a
+  running process; otherwise `503` / `unhealthy`.  
+- `GET /monitor/tunnel/{id}` — `ok` / `disabled` / `503` for per-tunnel checks.  
+
+From another container on the same Compose network, use e.g.
+`http://panel:8080/monitor/stack`.
+
+### Continuous integration
+
+GitHub Actions workflow `.github/workflows/ci.yml` builds the Docker image and
+checks the Python panel (install dependencies, `compileall`, import `FastAPI` app).
+
+### Local panel (without Docker)
+
+	python3 -m venv .venv
+	.venv/bin/pip install -r panel/requirements.txt
+	export AUTOSHH_PANEL_CONFIG_PATH=$PWD/data/connections.json
+	PYTHONPATH=. .venv/bin/uvicorn panel.app.main:app --reload --port 8080
+
+Requires `autossh` and `ssh` on the host if you enable tunnels.
