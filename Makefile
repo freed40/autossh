@@ -4,7 +4,7 @@
 
 VER=		1.4g
 
-SSH=		/opt/homebrew/bin/ssh
+SSH=		/usr/bin/ssh
 
 prefix=		/usr/local
 exec_prefix=	${prefix}

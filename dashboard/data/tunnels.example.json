@@ -1,0 +1,13 @@
+{
+  "tunnels": [
+    {
+      "id": "home-web",
+      "name": "Heim-Web",
+      "localPort": 9080,
+      "remotePort": 80,
+      "sshUser": "deinuser",
+      "sshHost": "dein-server.dyndns.example",
+      "sshPort": 22
+    }
+  ]
+}

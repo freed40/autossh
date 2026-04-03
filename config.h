@@ -160,7 +160,7 @@
 #define HAVE_VSYSLOG 1
 
 /* Define to 1 if `fork' works. */
-/* #undef HAVE_WORKING_FORK */
+#define HAVE_WORKING_FORK 1
 
 /* Define to 1 if `vfork' works. */
 #define HAVE_WORKING_VFORK 1
@@ -184,7 +184,7 @@
 #define PACKAGE_VERSION "1.4"
 
 /* Set this to the path to your ssh program. */
-#define PATH_SSH "/opt/homebrew/bin/ssh"
+#define PATH_SSH "/usr/bin/ssh"
 
 /* Define to the type of arg 1 for `select'. */
 #define SELECT_TYPE_ARG1 int
@@ -196,7 +196,7 @@
 #define SELECT_TYPE_ARG5 (struct timeval *)
 
 /* Define to 1 if you have the ANSI C header files. */
-/* #undef STDC_HEADERS */
+#define STDC_HEADERS 1
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #define TIME_WITH_SYS_TIME 1

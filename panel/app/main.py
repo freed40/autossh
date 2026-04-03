@@ -6,6 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, PlainTextResponse
+from starlette.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -78,11 +79,12 @@ def api_replace_tunnel(tunnel_id: str, body: Tunnel) -> Tunnel:
     return updated
 
 
-@app.delete("/api/tunnels/{tunnel_id}", status_code=204)
-def api_delete_tunnel(tunnel_id: str) -> None:
+@app.delete("/api/tunnels/{tunnel_id}")
+def api_delete_tunnel(tunnel_id: str) -> Response:
     if not manager.delete_tunnel(tunnel_id):
         raise HTTPException(status_code=404, detail="Tunnel unbekannt")
     manager.reconcile()
+    return Response(status_code=204)
 
 
 @app.patch("/api/tunnels/{tunnel_id}/enabled", response_model=TunnelStatus)

@@ -2,6 +2,10 @@
 autossh Version 1.4
 -------------------
 
+A **German** overview of the optional `panel/` and `dashboard/` additions in
+this repository is in **README.de.md**. The sections below that describe those
+tools are in English.
+
 Building and Installing Autossh
 --------------------------------
 
@@ -233,8 +237,15 @@ Kudos and raspberries to harding [at] motd.ca
 Web Control Panel (optional)
 ----------------------------
 
-This repository also contains a small **FastAPI** application under `panel/`
-that starts `autossh` as child processes from a JSON configuration file.
+Besides the C program above, this repo includes two optional helpers:
+
+- **`panel/`** — **Python / FastAPI** control panel (mostly **remote** `-R`
+  tunnels, Docker Compose, Uptime Kuma hooks).  
+- **`dashboard/`** — **Node / Express** API for **local** `-L` forwards from
+  your laptop (see *Local tunnel dashboard* below).
+
+The **FastAPI** app under `panel/` starts `autossh` as child processes from a
+JSON configuration file.
 It provides a web UI and HTTP endpoints to enable or disable tunnels, create
 or edit definitions, and expose health checks for **Uptime Kuma**.
 
@@ -302,3 +313,48 @@ checks the Python panel (install dependencies, `compileall`, import `FastAPI` ap
 	PYTHONPATH=. .venv/bin/uvicorn panel.app.main:app --reload --port 8080
 
 Requires `autossh` and `ssh` on the host if you enable tunnels.
+
+
+Local tunnel dashboard (optional, Node.js)
+------------------------------------------
+
+The `dashboard/` directory is a small **Express** API for managing **local**
+port forwards (`-L localPort:localhost:remotePort`) from your workstation
+(e.g. a MacBook) to a home server. It is aimed at non-standard SSH ports and
+multiple named tunnels.
+
+### Setup
+
+	cd dashboard
+	cp data/tunnels.example.json data/tunnels.json
+	# Edit data/tunnels.json — each tunnel: id, name, localPort, remotePort,
+	# sshUser, sshHost, sshPort (default 2222).
+
+	npm install
+	npm start
+
+Default API URL: **http://127.0.0.1:3456** (change with the `PORT` environment
+variable). Requires **Node.js 18+** and `autossh` on your `PATH`.
+
+### Behaviour and safety
+
+The backend starts `autossh` with **`child_process.spawn` and an argument
+array only** (`shell: false`), so tunnel fields are not passed through a shell
+and injection risk is reduced. Inputs are validated (ports, user name, host).
+
+For reliable **start/stop and PID tracking**, the spawned command omits
+autossh’s **`-f`** (foreground child process). OpenSSH options include
+`ExitOnForwardFailure=yes` and `BatchMode=yes` (key-based auth; no password
+prompt in the UI).
+
+### HTTP API (summary)
+
+- `GET /api/health` — liveness  
+- `GET /api/tunnels` — list configs plus `status` (`active` / `inactive`), `pid`, log size  
+- `GET /api/tunnels/:id/logs` — recent stdout/stderr lines for that tunnel  
+- `POST /api/tunnels/:id/start` — start tunnel  
+- `POST /api/tunnels/:id/stop` — stop tunnel (SIGTERM, then SIGKILL if needed)  
+
+CORS is enabled for local front-end development. A **React + Tailwind** UI
+can be added under `dashboard/` as a separate build (e.g. Vite) that talks to
+this API.
